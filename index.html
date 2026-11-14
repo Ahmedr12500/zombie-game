@@ -1120,10 +1120,10 @@ function lightAt(wx,wy,rd,cf,P){
 function frr(x,y,w,h,r){grr(ctx,x,y,w,h,r)}
 
 /* ---------- Three-dimensional first-person zombies ---------- */
-let zombie3D=null,zombie3DReady=false;
+let zombie3D=null,zombie3DReady=false,zombie3DFailed=false;
 const zombie3DModels=new WeakMap();
 function initZombie3D(){
-  if(zombie3DReady)return;
+  if(zombie3DReady||zombie3DFailed)return;
   zombie3DReady=true;
   import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js').then(THREE=>{
     const canvas=$('z3d'),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
@@ -1135,7 +1135,7 @@ function initZombie3D(){
     const key=new THREE.DirectionalLight(0xffe2c1,2.1);key.position.set(-260,-360,500);scene.add(key);
     const rim=new THREE.DirectionalLight(0x91a8bb,1.15);rim.position.set(280,-80,-300);scene.add(rim);
     zombie3D={THREE,renderer,scene,camera,models:new Set()};
-  }).catch(()=>{zombie3DReady=false;});
+  }).catch(()=>{zombie3DReady=false;zombie3DFailed=true;const c=$('z3d');if(c)c.style.display='none';});
 }
 function zombie3DModel(z){
   const {THREE}=zombie3D,group=new THREE.Group(),r=z.r,big=z.k==='brute'||z.k==='boss';
@@ -1191,7 +1191,8 @@ function renderZombie3D(frame){
   const canvas=$('z3d');
   if(!fpMode){canvas.style.display='none';return}
   canvas.style.display='block';
-  if(!zombie3D){initZombie3D();return}
+  if(!zombie3D){initZombie3D();for(const q of frame)drawZFP(q.z,q.x,q.y,q.scale,q.light);return}
+  try{
   const {THREE,renderer,scene,camera,models}=zombie3D;
   const alive=new Set();
   for(const q of frame){
@@ -1213,6 +1214,10 @@ function renderZombie3D(frame){
   }
   for(const group of [...models])if(!alive.has(group.userData.source)){scene.remove(group);models.delete(group);group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){for(const mat of (Array.isArray(o.material)?o.material:[o.material]))mat.dispose()}})}
   renderer.render(scene,camera);
+  }catch(err){
+    zombie3DFailed=true;zombie3DReady=false;zombie3D=null;canvas.style.display='none';
+    for(const q of frame)drawZFP(q.z,q.x,q.y,q.scale,q.light);
+  }
 }
 initZombie3D();
 /* ---------- end 3D first-person zombies ---------- */
