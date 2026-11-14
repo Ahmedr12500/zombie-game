@@ -6,4 +6,5 @@ A browser zombie shooter: four waves, a gun shop, a watchtower, kill streaks, an
 
 - WASD move · Shift sprint · mouse aim/look · click fire
 - G grenade · V vaporize · E tower / mart counter · C switch view · F fullscreen
-- Built with HTML5 canvas + WebAudio, no dependencies.
+- Built with HTML5 canvas + WebAudio.
+- Textures: brick & grass from the [three.js](https://github.com/mrdoob/three.js) examples (MIT); asphalt generated procedurally.
