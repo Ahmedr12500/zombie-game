@@ -1198,7 +1198,7 @@ function renderZombie3D(frame){
     const z=q.z;if(z.dying<=0&&z.vapor<=0){} // keep dying meshes briefly for their fall animation
     alive.add(z);
     let group=zombie3DModels.get(z);
-    if(!group){group=zombie3DModel(z);zombie3DModels.set(z,group);scene.add(group);models.add(group)}
+    if(!group){group=zombie3DModel(z);group.userData.source=z;zombie3DModels.set(z,group);scene.add(group);models.add(group)}
     const m=group.userData.model,sc=q.scale;
     group.position.set(q.x,q.y,Math.max(-20,100-q.depth*.035));
     group.scale.set(sc,sc,sc);
@@ -1211,7 +1211,7 @@ function renderZombie3D(frame){
     if(!z.limb.ra)m.arms[1].upper.visible=m.arms[1].fore.visible=false;
     m.head.visible=!!z.limb.head;
   }
-  for(const group of models){if(!alive.has(group.userData.modelRef)){/* retained in WeakMap; stale groups are culled below */}}
+  for(const group of models){if(!alive.has(group.userData.source)){/* retained in WeakMap; stale groups are culled below */}}
   renderer.render(scene,camera);
 }
 initZombie3D();
