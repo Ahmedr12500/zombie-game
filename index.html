@@ -1205,7 +1205,7 @@ function renderZombie3D(frame){
     group.rotation.z=z.crawl?-.08:Math.sin(S.t*(z.k==='runner'?12:5)+z.ph)*.025;
     group.visible=!!z.limb.head||!!z.limb.la||!!z.limb.ra;
     group.traverse(o=>{if(o.isMesh){o.material.transparent=!!z.vapor||!!z.dying;o.material.opacity=z.vapor?Math.max(.08,z.vapor/.6):z.dying?Math.max(.12,z.dying/.4):1}});
-    m.arms.forEach((a,i)=>{a.upper.rotation.z=Math.sin(S.t*5+z.ph+i)*.08;a.fore.rotation.z=Math.sin(S.t*5+z.ph+i+1)*.12});
+    m.arms.forEach((a,i)=>{a.upper.rotation.z=Math.sin(S.t*5+z.ph+i)*.13;a.fore.rotation.z=Math.sin(S.t*5+z.ph+i+1)*.16});m.legs.forEach((leg,i)=>{leg.rotation.z=Math.sin(S.t*5+z.ph+i*Math.PI)*.09});
     if(!z.limb.ll)m.legs[0].visible=false;if(!z.limb.rl)m.legs[1].visible=false;
     if(!z.limb.la)m.arms[0].upper.visible=m.arms[0].fore.visible=false;
     if(!z.limb.ra)m.arms[1].upper.visible=m.arms[1].fore.visible=false;
@@ -1544,7 +1544,7 @@ function renderFP(){
       continue}
     const o=it.o,sc=it.sc,gy=hor+eye*sc,sx=it.sx,cf=Math.pow(Math.max(0,1-Math.abs(it.rel)/.56),.8),l=lightAt(o.x,o.y,it.rd,cf,P),yh=hor+(eye-it.h)*sc;
     switch(it.kind){
-      case 'z':z3dFrame.push({z:o,x:sx,y:gy,scale:sc,light:l,depth:it.rd});break;
+      case 'z':if(zombie3D)z3dFrame.push({z:o,x:sx,y:gy,scale:sc,light:l,depth:it.rd});else drawZFP(o,sx,gy,sc,l);break;
       case 'dog':drawDogFP(o,sx,gy,sc,l,a);break;
       case 'pick':{if(o.t<3&&Math.floor(o.t*8)%2)break;const s=sc;ctx.shadowColor=o.g?'#ffe08a':'#b6ffb6';ctx.shadowBlur=10;ctx.fillStyle=o.g?shade('#4b5a36',Math.max(l,.5)):shade('#ecebe2',Math.max(l,.6));ctx.fillRect(sx-11*s,gy-14*s,22*s,14*s);ctx.shadowBlur=0;
         if(!o.g){ctx.fillStyle='#c41f33';ctx.fillRect(sx-2*s,gy-12*s,4*s,10*s);ctx.fillRect(sx-5*s,gy-9*s,10*s,4*s)}break}
