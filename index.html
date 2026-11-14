@@ -1165,32 +1165,65 @@ function drawZFP(z,sx,gy,u,l){
     else{ctx.fillStyle=C('#7a0d10');ctx.beginPath();ctx.ellipse(0,shY-r*.06,r*.22,r*.12,0,0,7);ctx.fill();ctx.fillStyle=C('#c9b7a0');ctx.beginPath();ctx.arc(0,shY-r*.08,r*.06,0,7);ctx.fill();
       for(let k=0;k<3;k++){ctx.fillStyle=C('#8a0d10');ctx.fillRect(-r*.15+k*r*.12,shY-r*.04,r*.05,r*(.3+k*.12))}}
   }
-  // Procedural skin detail: deterministic mottling, pores, bruising and torn-flesh texture.
+  // High-contrast organic decay: mottled skin, bruising, torn fabric and wet wounds.
   if(!hit&&!z.vapor){
     const seed=Math.abs(Math.floor((z.ph||0)*7919))+Math.floor((z.x||0)*.17)+Math.floor((z.y||0)*.11);
     const hash=n=>{const v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v)};
     const torsoY=z.crawl?-r*.55:-H*.64;
-    ctx.save();
-    ctx.beginPath();ctx.ellipse(0,torsoY,z.crawl?r*.88:r*.64,z.crawl?r*.43:r*.69,0,0,7);ctx.clip();
-    for(let n=0;n<64;n++){
-      const px=(hash(n+1)*2-1)*(z.crawl?r*.82:r*.6);
-      const py=torsoY+(hash(n+81)*2-1)*(z.crawl?r*.39:r*.65);
-      const pr=r*(.012+hash(n+151)*.027);
-      ctx.fillStyle=hash(n+221)>.48?'rgba(25,30,24,.24)':'rgba(218,202,174,.13)';
-      ctx.beginPath();ctx.ellipse(px,py,pr,pr*(.55+hash(n+301)),hash(n+401)*3,0,7);ctx.fill();
+    const bodyW=z.crawl?r*.88:bw*.49, bodyH=z.crawl?r*.43:(hipY-shY)*.48;
+    const skin=(x,y,rx,ry,rot=0)=>{const gr=ctx.createRadialGradient(x-rx*.25,y-ry*.3,Math.max(.2,rx*.05),x,y,Math.max(rx,ry));gr.addColorStop(0,'rgba(190,157,119,.22)');gr.addColorStop(.48,'rgba(87,91,66,.20)');gr.addColorStop(1,'rgba(18,22,18,.5)');ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,7);ctx.fill()};
+    // Bruise clouds and irregular pores clipped to the ragged shirt silhouette.
+    ctx.save();ctx.beginPath();ctx.ellipse(0,torsoY,bodyW,bodyH,0,0,7);ctx.clip();
+    for(let n=0;n<115;n++){
+      const px=(hash(n+1)*2-1)*bodyW,py=torsoY+(hash(n+81)*2-1)*bodyH;
+      const pr=r*(.008+hash(n+151)*.025);
+      ctx.fillStyle=hash(n+221)>.5?'rgba(12,17,14,.32)':'rgba(198,180,145,.16)';
+      ctx.beginPath();ctx.ellipse(px,py,pr,pr*(.45+hash(n+301)),hash(n+401)*3,0,7);ctx.fill();
     }
-    const woundX=(hash(501)-.5)*r*.72,woundY=torsoY+(hash(502)-.5)*r*.72;
-    const wound=ctx.createRadialGradient(woundX,woundY,1,woundX,woundY,r*.34);
-    wound.addColorStop(0,'rgba(28,5,7,.94)');wound.addColorStop(.42,'rgba(91,13,18,.88)');
-    wound.addColorStop(.72,'rgba(126,48,39,.58)');wound.addColorStop(1,'rgba(90,20,18,0)');
-    ctx.fillStyle=wound;ctx.beginPath();ctx.ellipse(woundX,woundY,r*.34,r*.22,hash(503)*2,0,7);ctx.fill();
-    ctx.strokeStyle='rgba(35,8,10,.7)';ctx.lineWidth=Math.max(1,r*.025);ctx.beginPath();
-    ctx.moveTo(woundX-r*.28,woundY-r*.08);ctx.quadraticCurveTo(woundX-r*.04,woundY+r*.04,woundX+r*.3,woundY-r*.13);ctx.stroke();
+    for(let n=0;n<7;n++){const x=(hash(n+430)-.5)*bodyW*1.7,y=torsoY+(hash(n+440)-.5)*bodyH*1.7;
+      const bruise=ctx.createRadialGradient(x,y,1,x,y,r*(.08+hash(n+450)*.2));
+      bruise.addColorStop(0,'rgba(28,12,20,.58)');bruise.addColorStop(.55,'rgba(91,32,38,.38)');bruise.addColorStop(1,'rgba(70,20,25,0)');
+      ctx.fillStyle=bruise;ctx.beginPath();ctx.ellipse(x,y,r*.22,r*.14,hash(n+460)*3,0,7);ctx.fill();
+    }
+    // Torn, dark lacerations with raised, uneven edges and short blood trails.
+    for(let n=0;n<3;n++){
+      const x=(hash(n+501)-.5)*bodyW*1.35,y=torsoY+(hash(n+511)-.5)*bodyH*1.5,len=r*(.18+hash(n+521)*.24);
+      ctx.strokeStyle='rgba(18,4,7,.82)';ctx.lineWidth=Math.max(1,r*.055);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(x-len*.5,y);ctx.quadraticCurveTo(x,y+r*.07,x+len*.5,y-r*.025);ctx.stroke();
+      ctx.strokeStyle='rgba(157,43,39,.65)';ctx.lineWidth=Math.max(.8,r*.018);ctx.beginPath();ctx.moveTo(x-len*.45,y-r*.045);ctx.quadraticCurveTo(x,y-r*.09,x+len*.42,y-r*.07);ctx.stroke();
+      ctx.fillStyle='rgba(95,7,13,.8)';ctx.beginPath();ctx.ellipse(x+len*.32,y+r*.12,r*.035,r*.11,.12,0,7);ctx.fill();
+    }
+    // Frayed fabric cuts and stitching; keeps the shirt from reading as a flat blob.
+    ctx.strokeStyle='rgba(9,12,10,.75)';ctx.lineWidth=Math.max(1,r*.025);
+    for(let n=0;n<4;n++){const x=(hash(n+601)-.5)*bodyW*1.7,y=torsoY+(hash(n+611)-.5)*bodyH*1.7;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(hash(n+621)-.5)*r*.25,y+r*(.12+hash(n+631)*.2));ctx.lineTo(x+r*.05,y+r*.24);ctx.stroke();}
     ctx.restore();
-    // Dry, cracked skin and dirty abrasions on exposed forearms.
-    ctx.strokeStyle='rgba(35,12,12,.48)';ctx.lineWidth=Math.max(1,r*.018);
-    for(let n=0;n<5;n++){const x=(hash(n+601)-.5)*r*1.25,y=-H*.68+(hash(n+611)-.5)*r*.7;
-      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(hash(n+621)-.5)*r*.18,y+r*(.08+hash(n+631)*.12));ctx.stroke()}
+    // Exposed forearms: dirty skin, tendon lines, scars and knuckle creases.
+    if(!z.crawl){
+      for(const side of[-1,1]){
+        const ex=side*bw*.56,ey=shY+H*.15,hx=side*r*.34,hy=shY+H*.1+Math.sin(t+side)*r*.1;
+        skin((ex+hx)*.5,(ey+hy)*.5,r*.105,r*.22,side*.15);
+        ctx.strokeStyle='rgba(34,17,15,.58)';ctx.lineWidth=Math.max(1,r*.018);ctx.beginPath();
+        ctx.moveTo(ex,ey);ctx.quadraticCurveTo((ex+hx)*.5+r*.04,ey+r*.09,hx,hy);ctx.stroke();
+        ctx.strokeStyle='rgba(213,185,145,.18)';ctx.lineWidth=Math.max(.7,r*.012);ctx.beginPath();
+        ctx.moveTo(ex-r*.04,ey+r*.03);ctx.lineTo(hx-r*.02,hy-r*.02);ctx.stroke();
+      }
+    }
+    // Facial decay: bruised eye sockets, asymmetric torn cheek and dried blood.
+    if(lb.head&&!z.crawl){
+      const fy=-H*.905,fr=r*.29;
+      const cheek=ctx.createRadialGradient(-fr*.48,fy+fr*.45,1,-fr*.48,fy+fr*.45,fr*.7);
+      cheek.addColorStop(0,'rgba(19,8,10,.9)');cheek.addColorStop(.55,'rgba(91,27,28,.68)');cheek.addColorStop(1,'rgba(91,27,28,0)');
+      ctx.fillStyle=cheek;ctx.beginPath();ctx.ellipse(-fr*.48,fy+fr*.45,fr*.62,fr*.48,-.35,0,7);ctx.fill();
+      for(const side of[-1,1]){
+        ctx.fillStyle='rgba(8,5,7,.88)';ctx.beginPath();ctx.ellipse(side*fr*.38,fy-fr*.04,fr*.27,fr*.2,side*.12,0,7);ctx.fill();
+        ctx.fillStyle='rgba(125,22,23,.6)';ctx.beginPath();ctx.ellipse(side*fr*.4,fy+fr*.12,fr*.22,fr*.07,side*.2,0,7);ctx.fill();
+        ctx.fillStyle=side<0?'#d6bca0':'#9b1718';ctx.beginPath();ctx.arc(side*fr*.38,fy-fr*.04,Math.max(1,fr*.09),0,7);ctx.fill();
+      }
+      ctx.strokeStyle='rgba(24,5,8,.9)';ctx.lineWidth=Math.max(1,fr*.09);ctx.beginPath();ctx.moveTo(-fr*.32,fy+fr*.57);ctx.quadraticCurveTo(0,fy+fr*.82,fr*.35,fy+fr*.55);ctx.stroke();
+      ctx.fillStyle='rgba(220,205,174,.82)';for(let q=0;q<4;q++)ctx.fillRect(-fr*.22+q*fr*.14,fy+fr*.58,fr*.075,fr*.13);
+      ctx.strokeStyle='rgba(75,12,16,.8)';ctx.lineWidth=Math.max(1,fr*.035);ctx.beginPath();ctx.moveTo(fr*.55,fy+fr*.18);ctx.lineTo(fr*.72,fy+fr*.58);ctx.lineTo(fr*.62,fy+fr*.92);ctx.stroke();
+    }
   }
   ctx.restore();
   if(eyeY!==undefined&&!z.dying&&!z.vapor){const big=z.wind>0||z.charge>0,ey=gy+eyeY*u*sq,er=Math.max(1.1,r*.055*u)*(big?1.5:1);ctx.fillStyle=z.k==='boss'?(big?'#ff5a1f':'#ffb020'):'#ff3b30';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;
